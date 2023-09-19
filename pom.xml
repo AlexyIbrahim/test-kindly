@@ -3,8 +3,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.AlexyIbrahim</groupId>
-  <artifactId>chat-sdk</artifactId>
-  <version>0.5.3</version>
+  <artifactId>test-kindly</artifactId>
+  <version>0.5.4</version>
   <packaging>pom</packaging>
   <description>First version release</description>
 </project>
