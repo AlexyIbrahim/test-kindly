@@ -3,8 +3,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.AlexyIbrahim</groupId>
-  <artifactId>kindly</artifactId>
-  <version>0.5.7</version>
+  <artifactId>test-kindly</artifactId>
+  <version>0.5.8</version>
   <packaging>pom</packaging>
   <description>First version release</description>
 </project>
