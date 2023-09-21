@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ai.kindly</groupId>
     <artifactId>chat-sdk</artifactId>
-    <version>0.5.31</version>
+    <version>0.5.32</version>
     <packaging>aar</packaging>
     <description>POM was created from install:install-file</description>
     <url>https://github.com/AlexyIbrahim/test-kindly</url>
     <inceptionYear>2023</inceptionYear>
 
-    <developers>
+<!--     <developers>
         <developer>
             <id>AlexyIbrahim</id>
             <name>Alexy</name>
@@ -31,5 +31,5 @@
             <extensions>true</extensions>
           </plugin>
         </plugins>
-    </build>
+    </build> -->
 </project>
