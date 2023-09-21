@@ -4,7 +4,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.github.AlexyIbrahim</groupId>
   <artifactId>test-kindly</artifactId>
-  <version>0.5.19</version>
-  <packaging>pom</packaging>
+  <version>0.5.20</version>
   <description>First version release</description>
 </project>
