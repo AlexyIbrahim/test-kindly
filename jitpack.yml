@@ -1,3 +1,3 @@
 install: 
-  - FILE="-Dfile=chat-sdk.aar" 
-  - mvn install:install-file $FILE -DgroupId=ai.kindly -DartifactId=chat-sdk -Dversion=0.5.18 -Dpackaging=aar -DpomFile=pom.xml
+  - FILE="-Dfile=test-kindly.aar" 
+  - mvn install:install-file $FILE -DgroupId=com.github.AlexyIbrahim -DartifactId=test-kindly -Dversion=0.5.19 -Dpackaging=aar -DpomFile=pom.xml
