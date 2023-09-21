@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ai.kindly</groupId>
     <artifactId>chat-sdk</artifactId>
-    <version>0.5.29</version>
+    <version>0.5.30</version>
     <packaging>aar</packaging>
     <description>POM was created from install:install-file</description>
 
@@ -12,7 +12,7 @@
           <plugin>
             <groupId>com.simpligility.maven.plugins</groupId>
             <artifactId>android-maven-plugin</artifactId>
-            <version>1.5.1</version>
+            <version>4.5.0</version>
             <extensions>true</extensions>
           </plugin>
         </plugins>
