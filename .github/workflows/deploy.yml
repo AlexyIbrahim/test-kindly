@@ -1,0 +1,42 @@
+name: Deploy to dev
+
+on:  
+  push:  
+    branches:  
+      - main
+    tags:  
+      - '*'
+
+jobs:  
+  deploy-dev:  
+    runs-on: ubuntu-latest
+
+    steps:  
+    - name: Checkout code  
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17  
+      uses: actions/setup-java@v3  
+      with:  
+        java-version: 17  
+        distribution: 'temurin'
+
+    - name: Log github.ref  
+      run:  |  
+        echo "github.ref: ${{ github.ref }}"
+
+    - name: Log secrets ssh  
+      run:  |  
+        echo "secrets.KINDLY_GITHUB_BOT_PRIVATE_KEY: ${{ secrets.KINDLY_GITHUB_BOT_PRIVATE_KEYtoken }}"
+
+    # - name: Run Ansible playbook
+    #   uses: dawidd6/action-ansible-playbook@v2
+    #   with:
+    #     playbook: playbook.yml
+    #     directory: ./ansible
+    #     key: ${{secrets.SSH_PRIVATE_KEY}}
+    #     inventory: |
+    #       [localhost]
+    #       127.0.0.1
+    #     options: |
+    #       --extra-vars github_token=${{ steps.generate-token.outputs.token }}

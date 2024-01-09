@@ -1,0 +1,181 @@
+---
+- hosts: localhost
+  vars:
+    android_project_path: "/Users/alexy/src/Android/Projects/kindly-chat-sources/kindlysdk"
+    output_directory: "build/outputs"
+    output_path: "{{ playbook_dir }}/{{ output_directory }}"
+    repo_dir: "{{ playbook_dir }}/repo"
+    repo_name: "test-kindly"
+    git_repo: "git@github.com:AlexyIbrahim/test-kindly.git"
+    branch: "main"
+    github_user: "AlexyIbrahim"
+    github_token: "{{ github_token }}"
+    dir: "{{ playbook_dir }}"
+
+  tasks:
+    - name: Log output directory path
+      debug:
+        msg: "🌿 Output path: {{ output_path }}"
+
+    - name: Check if bump2version is installed
+      command: pip show bump2version
+      register: bump2version_installed
+      ignore_errors: yes
+
+    - name: Install bump2version
+      command: pip install bump2version
+      when: bump2version_installed.rc != 0
+
+    - name: Get version dry run
+      command: bump2version --allow-dirty --list --dry-run patch
+      register: bump2version_output
+
+    - name: Extract the new version
+      set_fact:
+        version: "{{ bump2version_output.stdout_lines | select('match', '^new_version=.*') | map('replace', 'new_version=', '') | first }}"
+
+    - name: Increment the patch version
+      command: bump2version --allow-dirty --no-commit patch
+        
+    - name: Log version
+      debug:
+        msg: "🌿 Deploying version {{ version }}"
+
+    - name: Remove files inside outputs directory
+      file:
+        path: "{{ output_path }}"
+        state: absent
+        # recurse: yes
+
+    - name: Create output directory if it doesn't exist
+      file:
+        path: "{{ output_path }}"
+        state: directory
+
+    - name: Build project and generate aar file
+      shell: |
+        ./gradlew assembleRelease
+      args:
+        chdir: "{{ android_project_path }}"
+
+    - name: Check if repo dir exists
+      block:
+        - name: check if repo dir exists
+          stat:
+            path: "{{ repo_dir }}"
+          register: repo_dir_exists
+        
+        - name: Create repo dir if it doesn't exist
+          file:
+            path: "{{ repo_dir }}"
+            state: directory
+          when: repo_dir_exists.stat.exists == False
+        
+        - name: Clone git repository and checkout desired branch
+          block:
+          - name: Clone git repository
+            command: git clone {{ git_repo }} {{ repo_dir }}
+            args:
+              chdir: "{{ dir }}"
+
+          - name: Checkout desired branch
+            command: git checkout {{ branch }}
+            args:
+              chdir: "{{ repo_dir }}"
+
+          - name: Pull latest changes
+            command: git pull origin {{ branch }}
+            args:
+              chdir: "{{ repo_dir }}"
+          when: repo_dir_exists.stat.exists == False
+
+        - name: Discarg and pull changes
+          block:
+          - name: checkout branch
+            command: git checkout {{ branch }}
+            args:
+              chdir: "{{ repo_dir }}"
+
+          - name: Discard changes
+            command: git checkout -- .
+            args:
+              chdir: "{{ repo_dir }}"
+          
+          - name: Pull latest changes
+            command: git pull origin {{ branch }}
+            args:
+              chdir: "{{ repo_dir }}"
+          when: repo_dir_exists.stat.exists == True
+
+    - name: Copy newly generated aar file to cloned git repository
+      copy:
+        src: "{{ android_project_path }}/build/outputs/aar/kindlysdk-release.aar"
+        dest: "{{ repo_dir }}"
+      args:
+        remote_src: yes
+
+    - name: Update version in pom.xml and jitpack.yml
+      shell: |
+        sed -i "" "s/<version>.*<\/version>/<version>{{ version }}<\/version>/g" {{ repo_dir }}/pom.xml
+        sed -i "" "s/-Dversion=.* -Dpackaging/-Dversion={{ version }} -Dpackaging/g" {{ repo_dir }}/jitpack.yml
+      tags:
+        - set_version
+      args:
+        chdir: "{{ repo_dir }}"
+
+    - name: Update script permissions
+      file:
+        path: "{{ dir }}/generate_dep.sh"
+        mode: '0755'
+
+    - name: Run generate_dep.sh  
+      shell: ./generate_dep.sh  
+      environment:
+        BUILD_GRADLE_PATH: "{{ android_project_path }}/build.gradle"
+        POM_XML_PATH: "{{ repo_dir }}/pom.xml"
+      args:  
+        chdir: "{{ dir }}"
+
+    - name: Check if there are file changes
+      command: git status --porcelain
+      args:
+        chdir: "{{ repo_dir }}"
+      register: git_status
+
+    - name: Push the tag and the commit
+      block:
+        - name: Commit and push new aar file and updated version
+          shell: |
+            git add kindlysdk-release.aar pom.xml jitpack.yml
+            git commit -m "Update aar file and version to {{ version }}"
+            git tag {{ version }}
+            git push origin {{ branch }}
+            git push origin {{ version }}
+          args:
+            chdir: "{{ repo_dir }}"
+          when: git_status.stdout_lines | length > 0
+
+        # - name: Create new GitHub release
+        #   uri:
+        #     url: "https://api.github.com/repos/{{ github_user }}/{{ repo_name }}/releases"
+        #     method: POST
+        #     headers:
+        #       Accept: "application/vnd.github+json"
+        #       Authorization: "Bearer {{ github_token }}"
+        #       X-GitHub-Api-Version: "2022-11-28"
+        #     body_format: json
+        #     body:
+        #       tag_name: "{{ version }}"
+        #       target_commitish: "main"
+        #       name: "v{{ version }}"
+        #       body: "Release of version {{ version }}"
+        #       draft: false
+        #       prerelease: false
+        #       generate_release_notes: true
+        #     status_code: 201
+        #     validate_certs: true
+        #   when: github_token is defined and github_token != ''
+        #   vars:
+        #     ansible_python_interpreter: python3
+
+      when: git_status.stdout_lines | length > 0
